@@ -117,13 +117,13 @@ app.get("/api/leaderboard", async (req, res) => {
     // IMPORTANT:
     // HeavenMS: characters có cột gm (0/1), name, level, fame, meso
     // Ẩn GM: WHERE gm = 0
-    const sql = `
-      SELECT id, name, level, fame, meso, gm
-      FROM characters
-      WHERE gm = 0
-      ORDER BY ${pick.orderBy} DESC, id ASC
-      LIMIT ?
-    `;
+const sql = `
+  SELECT name, level, fame, meso, gm
+  FROM characters
+  WHERE gm = 0
+  ORDER BY ${pick.orderBy} DESC, name ASC
+  LIMIT ?
+`;
 
     const p = getPool();
     const [rows] = await p.query(sql, [limit]);
