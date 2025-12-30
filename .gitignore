@@ -1,2 +1,5 @@
-node_modules
+sync_leaderboard.js
+sync_daemon.js
 .env
+index.html
+node_modules/
