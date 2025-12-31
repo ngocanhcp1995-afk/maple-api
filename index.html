@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Game Landing</title>
+  <style>
+    :root{
+      --bg0:#0b1020;
+      --bg1:#0f1733;
+      --stroke: rgba(255,255,255,.14);
+      --text:#e9edff;
+      --muted: rgba(233,237,255,.75);
+      --accent:#7c5cff;
+      --accent2:#2dd4ff;
+      --ok:#34d399;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --gold:#f8d35e;
+      --silver:#c7d2fe;
+      --bronze:#f0a36b;
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+      --radius: 22px;
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+      background:
+        linear-gradient(rgba(11,16,32,0.78), rgba(11,16,32,0.78)),
+        url("./bg.png") center/cover no-repeat fixed;
+
+      display:flex;
+      justify-content:center;
+      padding: clamp(14px, 2.5vw, 28px);
+    }
+
+    .shell{ width:min(1100px, 100%); }
+
+    /* HEADER */
+    .header{
+      display:flex;
+      gap:18px;
+      align-items:stretch;
+      margin-bottom: 18px;
+    }
+
+    .avatarWrap{
+      width:160px;
+      min-width:160px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(45,212,255,.25));
+      padding: 3px;
+      box-shadow: var(--shadow);
+    }
+    .avatar{
+      border-radius: 999px;
+      width:100%;
+      height:100%;
+      aspect-ratio: 1 / 1;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--stroke);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      position:relative;
+      backdrop-filter: blur(10px);
+    }
+    .avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .avatar .placeholder{
+      text-align:center;
+      color:var(--muted);
+      font-weight:600;
+      font-size:13px;
+      padding: 0 8px;
+    }
+
+    .titleCard{
+      flex:1;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:hidden;
+      padding: 18px 18px 14px;
+      backdrop-filter: blur(10px);
+    }
+    .titleCard::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(420px 220px at 20% 30%, rgba(124,92,255,.25), transparent 60%),
+        radial-gradient(420px 220px at 70% 40%, rgba(45,212,255,.18), transparent 60%);
+      filter: blur(6px);
+      pointer-events:none;
+    }
+    .titleInner{
+      position:relative;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .gameName{
+      font-size: clamp(26px, 3.6vw, 44px);
+      font-weight: 900;
+      letter-spacing: .4px;
+      margin: 2px 0 6px;
+      line-height:1.05;
+    }
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      font-weight:600;
+      font-size: 13px;
+    }
+    .statusPills{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-top: 6px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.20);
+      border: 1px solid var(--stroke);
+      color: var(--muted);
+      font-weight:700;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:999px;
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(251,191,36,.15);
+    }
+    .dot.ok{
+      background: var(--ok);
+      box-shadow: 0 0 0 4px rgba(52,211,153,.15);
+    }
+    .dot.bad{
+      background: var(--bad);
+      box-shadow: 0 0 0 4px rgba(251,113,133,.16);
+    }
+
+    /* LAYOUT */
+    .grid{
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      gap: 18px;
+      align-items:start;
+    }
+
+    .card{
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+    .cardHeader{
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+    }
+    .cardHeader h3{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      color: rgba(233,237,255,.85);
+    }
+    .cardBody{ padding: 14px 16px 16px; }
+
+    /* server info */
+    .kv{ display:grid; gap:10px; }
+    .row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .k{
+      color: rgba(233,237,255,.68);
+      font-weight:700;
+      font-size: 12px;
+    }
+    .v{
+      text-align:right;
+      font-weight:800;
+      font-size: 13px;
+      color: rgba(233,237,255,.92);
+      word-break: break-word;
+    }
+    .small{
+      font-size: 12px;
+      color: rgba(233,237,255,.7);
+      margin-top: 10px;
+      line-height: 1.45;
+    }
+    .muted{ color: rgba(233,237,255,.65); }
+
+    /* buttons + tabs */
+    .actions{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .btn{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 16px;
+      padding: 12px 14px;
+      font-weight: 900;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      transition: transform .12s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.28);
+    }
+    .btn.primary{
+      border-color: rgba(124,92,255,.45);
+      background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(45,212,255,.18));
+    }
+    .btn.primary:hover{
+      border-color: rgba(124,92,255,.75);
+      background: linear-gradient(135deg, rgba(124,92,255,.45), rgba(45,212,255,.22));
+    }
+    .icon{
+      width:16px;height:16px; display:inline-block;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,.35));
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom: 12px;
+    }
+    .tab{
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.16);
+      color: rgba(233,237,255,.88);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-weight: 950;
+      cursor:pointer;
+      transition: transform .12s ease, background .15s ease, border-color .15s ease;
+    }
+    .tab:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.28); }
+    .tab.active{
+      border-color: rgba(124,92,255,.55);
+      background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(45,212,255,.16));
+    }
+
+    .tools{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom: 12px;
+    }
+    .input{
+      flex:1;
+      min-width: 220px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 900;
+      outline: none;
+    }
+    .mini{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight: 950;
+      cursor:pointer;
+    }
+    .mini:hover{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.28); }
+
+    /* leaderboard */
+    .tableWrap{
+      border-radius: 18px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      table-layout: fixed; /* 🔒 KHÓA CỘT */
+    }
+    thead th{
+      text-align:left;
+      font-size: 12px;
+      letter-spacing:.35px;
+      text-transform: uppercase;
+      color: rgba(233,237,255,.75);
+      padding: 12px 12px;
+      background: rgba(255,255,255,.06);
+    }
+    tbody td{
+      padding: 12px 12px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      font-weight: 800;
+      color: rgba(233,237,255,.90);
+    }
+    tbody tr:hover{ background: rgba(255,255,255,.05); }
+    .rank{
+      width:88px;
+      font-variant-numeric: tabular-nums;
+      color: rgba(233,237,255,.82);
+      font-weight: 950;
+    }
+    .name{ font-weight: 1000; letter-spacing:.2px; }
+    .job{ color: rgba(233,237,255,.75); font-weight: 900; }
+    .score{ text-align:right; font-variant-numeric: tabular-nums; }
+
+    .badge{ display:inline-flex; align-items:center; gap:8px; }
+    .crown{ width:14px;height:14px; display:inline-block; }
+
+    .top1{ color: var(--gold); }
+    .top2{ color: var(--silver); }
+    .top3{ color: var(--bronze); }
+
+    /* responsive */
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+      .avatarWrap{ width:120px; min-width:120px; }
+    }
+    @media (max-width: 620px){
+      body{ padding: 12px; }
+      .header{ flex-direction: column; }
+      .avatarWrap{ width:110px; min-width:110px; }
+      .titleInner{ flex-direction: column; align-items:flex-start; }
+      .actions{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="avatarWrap">
+        <div class="avatar" id="avatarBox">
+          <div class="placeholder">hình ảnh avatar</div>
+        </div>
+      </div>
+
+      <div class="titleCard">
+        <div class="titleInner">
+          <div>
+            <div class="gameName" id="gameName">tên game</div>
+            <p class="subtitle" id="gameTagline">Trang chủ tải game & bảng xếp hạng</p>
+            <div class="statusPills">
+              <div class="pill"><span class="dot" id="srvDot"></span><span id="srvStatus">Đang kiểm tra server…</span></div>
+              <div class="pill" style="display:none"><span class="muted">Heartbeat:</span> <span id="srvHeartbeat">—</span></div>
+              <div class="pill"><span class="muted">Online:</span> <span id="srvOnline">—</span></div>
+              <div class="pill" style="display:none"><span class="muted">Auto refresh:</span> <span id="autoInfo">30s</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRID -->
+    <div class="grid">
+
+      <!-- SERVER INFO -->
+      <div class="card">
+        <div class="cardHeader">
+          <h3>Thông tin server</h3>
+          <span class="muted" id="lastUpdate" style="display:none">—</span>
+        </div>
+        <div class="cardBody">
+          <div class="kv" id="serverKV"></div>
+
+          <div class="small" style="display:none">
+            API: <span class="muted" id="serverApiText">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div class="card">
+        <div class="cardHeader">
+          <h3>Bảng xếp hạng</h3>
+          <span class="muted" id="lbMeta">—</span>
+        </div>
+
+        <div class="cardBody">
+
+          <div class="actions">
+            <button class="btn primary" id="btnDownload" type="button">
+              <svg class="icon" viewBox="0 0 24 24" fill="none">
+                <path d="M12 3v10m0 0 4-4m-4 4-4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Tải game
+            </button>
+
+            <button class="btn" id="btnRefresh" type="button">
+              <svg class="icon" viewBox="0 0 24 24" fill="none">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <path d="M20 4v6h-6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Làm mới
+            </button>
+          </div>
+
+          <div class="tabs">
+            <button class="tab active" data-type="level">Top Level</button>
+            <button class="tab" data-type="fame">Top Fame</button>
+            <button class="tab" data-type="meso">Top Meso</button>
+            <button class="tab" data-type="dog">Top Trộm Chó</button>
+            <button class="tab" data-type="fish">Top Câu Cá</button>
+          </div>
+
+          <div class="tools">
+            <input class="input" id="q" placeholder="Tìm người chơi (Enter)..." />
+            <button class="mini" id="btnSearch">Tìm</button>
+            <button class="mini" id="btnClear">Xóa</button>
+          </div>
+
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:88px;">Hạng</th>
+                  <th>Người chơi</th>
+                  <th>Nghề nghiệp</th>
+                  <th id="scoreHead" style="text-align:right;">Level</th>
+                </tr>
+              </thead>
+              <tbody id="lbBody"></tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  // =========================
+  // CONFIG
+  // =========================
+  const CONFIG = {
+    gameName: "Nấm Lùn Free",
+    tagline: "Ôn lại kỷ niệm xưa",
+    avatarUrl: "./namlunfree.png",
+
+    downloadUrl: "/maple_web/download.html",
+
+    serverInfoUrl: "/api/status",
+    leaderboardUrl: "/api/leaderboard",
+
+
+    autoRefreshMs: 30000,
+    requestTimeoutMs: 6500,
+    limit: 10
+  };
+
+  // =========================
+  // HELPERS
+  // =========================
+  async function fetchJsonWithTimeout(url, ms){
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try{
+      const res = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const fmt = new Intl.NumberFormat("vi-VN");
+
+  const timeFmt = (iso) => {
+    try{
+      const d = new Date(iso);
+      return d.toLocaleString("vi-VN", { hour12:false });
+    }catch{ return "—"; }
+  };
+
+  function setServerDot(isOnline){
+    const dot = $("srvDot");
+    dot.classList.remove("ok","bad");
+    if (isOnline === true) dot.classList.add("ok");
+    else dot.classList.add("bad");
+  }
+
+  function crownSvg(){
+    return `
+      <svg class="crown" viewBox="0 0 24 24" fill="none">
+        <path d="M4 19h16" stroke="rgba(233,237,255,.85)" stroke-width="2" stroke-linecap="round"/>
+        <path d="M6 18 5 8l5 4 2-6 2 6 5-4-1 10H6Z" fill="rgba(124,92,255,.25)" stroke="rgba(233,237,255,.45)" stroke-width="1.5" />
+      </svg>
+    `;
+  }
+
+  function rankClass(rank){
+    if(rank === 1) return "top1";
+    if(rank === 2) return "top2";
+    if(rank === 3) return "top3";
+    return "";
+  }
+
+  function renderAvatar(){
+    const box = $("avatarBox");
+    box.innerHTML = "";
+    if(CONFIG.avatarUrl){
+      const img = document.createElement("img");
+      img.src = CONFIG.avatarUrl;
+      img.alt = "avatar";
+      img.onerror = () => { box.innerHTML = '<div class="placeholder">avatar lỗi / không tải được</div>'; };
+      box.appendChild(img);
+    }else{
+      box.innerHTML = '<div class="placeholder">hình ảnh avatar</div>';
+    }
+  }
+
+  // ✅ Yêu cầu: Top Level hiện “Level”, các top khác hiện “Điểm”
+  function updateScoreHeader(){
+    const el = $("scoreHead");
+    if(!el) return;
+    el.textContent = (currentType === "level") ? "Level" : "Điểm";
+  }
+
+  // Map jobId -> tên nghề cơ bản (đủ dùng)
+  function jobName(jobId){
+    const j = Number(jobId);
+    if (!Number.isFinite(j)) return "—";
+    if (j === 0) return "Lính Mới";
+
+    if (j >= 100 && j < 200) return "Chiến Binh";
+    if (j >= 200 && j < 300) return "Phù Thủy";
+    if (j >= 300 && j < 400) return "Cung Thủ";
+    if (j >= 400 && j < 500) return "Thích Khách";
+    if (j >= 500 && j < 600) return "Hải Tặc";
+
+    // Cygnus / Aran (v83 hay gặp)
+    if (j >= 1100 && j < 1200) return "Chiến Binh Bình Minh";
+    if (j >= 1200 && j < 1300) return "Phù Thủy Lửa";
+    if (j >= 1300 && j < 1400) return "Cung Thủ Gió";
+    if (j >= 1400 && j < 1500) return "Lãng Khách Bóng Đêm";
+    if (j >= 1500 && j < 1600) return "Hải Tặc Sấm Sét";
+    if (j >= 2000 && j < 3000) return "Aran";
+
+    return String(j);
+  }
+
+  // =========================
+  // SERVER RENDER
+  // =========================
+  function renderServerInfoFromApiStatus(api){
+    const isOnline = !!api?.isOnline;
+    const onlineCount = Number(api?.onlineCount || 0);
+    const lastUpdateSec = (api?.lastUpdateSec ?? null);
+
+    $("srvOnline").textContent = isOnline ? fmt.format(onlineCount) : "0";
+    $("srvStatus").textContent = isOnline ? "Server Online" : "Server Offline";
+    $("srvHeartbeat").textContent = (lastUpdateSec === null) ? "—" : (fmt.format(Number(lastUpdateSec)) + "s");
+    setServerDot(isOnline);
+
+    const kv = $("serverKV");
+    kv.innerHTML = "";
+
+    const rows = [
+      ["Phiên bản", "MapleStory v83"],
+      ["Rate", "EXP x1 | MESO x1 | DROP x1"],
+      ["Reset ngày", "06:00"],
+      ["Khu vực", "Việt Nam"],
+    ];
+
+    for(const [k,v] of rows){
+      const div = document.createElement("div");
+      div.className = "row";
+      div.innerHTML = `<div class="k">${k}</div><div class="v">${String(v)}</div>`;
+      kv.appendChild(div);
+    }
+  }
+
+  // =========================
+  // LEADERBOARD
+  // =========================
+  function renderLeaderboard(lb){
+    const season = lb.season ?? "—";
+    $("lbMeta").textContent = `${season} • ${timeFmt(lb.updatedAt || new Date().toISOString())}`;
+
+    const body = $("lbBody");
+    body.innerHTML = "";
+
+    const players = Array.isArray(lb.players) ? lb.players.slice(0, CONFIG.limit) : [];
+    players.forEach((p, i) => {
+      const rank = i + 1;
+      const cls = rankClass(rank);
+
+      const nameCell = (rank === 1)
+        ? `<span class="badge ${cls}">${crownSvg()}<span class="name">${p.name ?? "—"}</span></span>`
+        : `<span class="name ${cls}">${p.name ?? "—"}</span>`;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="rank ${cls}">#${rank}</td>
+        <td>${nameCell}</td>
+        <td class="job">${p.jobName ?? "—"}</td>
+        <td class="score ${cls}">${fmt.format(p.score ?? 0)}</td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+
+  // =========================
+  // LOAD DATA
+  // =========================
+  let currentType = "level";
+  let timer = null;
+
+  function makeLbUrl(){
+    const url = new URL(CONFIG.leaderboardUrl);
+    url.searchParams.set("type", currentType);
+    url.searchParams.set("limit", String(CONFIG.limit));
+    return url.toString();
+  }
+
+  async function loadServer(){
+    try{
+      const data = await fetchJsonWithTimeout(CONFIG.serverInfoUrl, CONFIG.requestTimeoutMs);
+
+      const normalized = {
+        ok: data?.ok,
+        isOnline: (data?.isOnline ?? data?.online) === true,
+        onlineCount: Number(data?.onlineCount ?? data?.online_count ?? 0),
+        updatedAt: data?.updatedAt ?? data?.updated_at ?? null,
+        lastUpdateSec: data?.lastUpdateSec ?? data?.last_update_sec ?? null,
+        staleMs: data?.staleMs ?? null,
+      };
+
+      renderServerInfoFromApiStatus(normalized);
+    }catch(e){
+      console.error("SERVER FETCH ERROR:", e);
+
+      $("srvStatus").textContent = "Không lấy được server info";
+      $("srvOnline").textContent = "—";
+      $("srvHeartbeat").textContent = "—";
+      setServerDot(false);
+
+      const kv = $("serverKV");
+      kv.innerHTML = "";
+      const div = document.createElement("div");
+      div.className = "row";
+      div.innerHTML = `<div class="k">Lỗi</div><div class="v">Không gọi được API</div>`;
+      kv.appendChild(div);
+    }
+  }
+
+  async function loadLeaderboard(){
+    try{
+      const url = makeLbUrl();
+      const lbRaw = await fetchJsonWithTimeout(url, CONFIG.requestTimeoutMs);
+
+      const t = (lbRaw?.type || currentType || "level");
+
+      let season = "Top Level";
+      if (t === "fame") season = "Top Fame";
+      if (t === "meso") season = "Top Meso";
+      if (t === "dog")  season = "Top Trộm Chó";
+      if (t === "fish") season = "Top Câu Cá";
+
+      const scoreKey = lbRaw?.scoreKey || t;
+      const rows = Array.isArray(lbRaw?.rows) ? lbRaw.rows : [];
+
+      const getScore = (r) => {
+        if (scoreKey === "level") return r?.level ?? 0;
+        if (scoreKey === "fame")  return r?.fame ?? 0;
+        if (scoreKey === "meso")  return r?.meso ?? 0;
+        if (scoreKey === "dog")   return r?.dog_points ?? 0;
+        if (scoreKey === "fish")  return r?.fish_points ?? 0;
+        return 0;
+      };
+
+      const lb = {
+        season,
+        updatedAt: lbRaw?.updatedAt || new Date().toISOString(),
+        players: rows.map(r => ({
+          name: r?.name ?? "—",
+          jobName: jobName(r?.job),
+          score: Number(getScore(r) || 0),
+        }))
+      };
+
+      renderLeaderboard(lb);
+    }catch(e){
+      console.error(e);
+      $("lbMeta").textContent = "Không tải được leaderboard";
+      $("lbBody").innerHTML = "";
+    }
+  }
+
+  async function loadAll(){
+    await loadServer();
+    await loadLeaderboard();
+  }
+
+  function resetTimer(){
+    if(timer) clearInterval(timer);
+    timer = setInterval(loadAll, CONFIG.autoRefreshMs);
+  }
+
+  // =========================
+  // INIT
+  // =========================
+  function init(){
+    $("gameName").textContent = CONFIG.gameName;
+    $("gameTagline").textContent = CONFIG.tagline;
+
+    renderAvatar();
+    updateScoreHeader();
+
+    $("btnDownload").addEventListener("click", () => {
+      if(!CONFIG.downloadUrl){
+        alert("Bạn chưa set CONFIG.downloadUrl (link tải).");
+        return;
+      }
+      window.open(CONFIG.downloadUrl, "_blank");
+    });
+
+    $("btnRefresh").addEventListener("click", () => { loadAll(); });
+
+    $("btnSearch").addEventListener("click", () => { loadLeaderboard(); resetTimer(); });
+    $("btnClear").addEventListener("click", () => { $("q").value=""; loadLeaderboard(); resetTimer(); });
+
+    $("q").addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){ loadLeaderboard(); resetTimer(); }
+    });
+
+    document.querySelectorAll(".tab").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        currentType = btn.dataset.type;
+        document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active", b===btn));
+        updateScoreHeader();
+        loadLeaderboard();
+        resetTimer();
+      });
+    });
+
+    loadAll();
+    resetTimer();
+  }
+
+  init();
+</script>
+</body>
+</html>

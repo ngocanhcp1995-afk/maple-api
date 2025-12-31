@@ -1,0 +1,39 @@
+name: Sync Leaderboard (Every 1 min)
+
+on:
+  schedule:
+    - cron: "* * * * *"   # mỗi 1 phút
+  workflow_dispatch:      # cho phép chạy tay
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run sync
+        run: npm run sync
+        env:
+          # ===== LOCAL (HeavenMS) =====
+          LOCAL_DB_HOST: ${{ secrets.LOCAL_DB_HOST }}
+          LOCAL_DB_PORT: ${{ secrets.LOCAL_DB_PORT }}
+          LOCAL_DB_USER: ${{ secrets.LOCAL_DB_USER }}
+          LOCAL_DB_PASS: ${{ secrets.LOCAL_DB_PASS }}
+          LOCAL_DB_NAME: ${{ secrets.LOCAL_DB_NAME }}
+
+          # ===== REMOTE (Railway) =====
+          REMOTE_DB_HOST: ${{ secrets.REMOTE_DB_HOST }}
+          REMOTE_DB_PORT: ${{ secrets.REMOTE_DB_PORT }}
+          REMOTE_DB_USER: ${{ secrets.REMOTE_DB_USER }}
+          REMOTE_DB_PASS: ${{ secrets.REMOTE_DB_PASS }}
+          REMOTE_DB_NAME: ${{ secrets.REMOTE_DB_NAME }}

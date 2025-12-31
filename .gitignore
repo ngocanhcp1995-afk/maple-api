@@ -1,5 +1,7 @@
-sync_leaderboard.js
-sync_daemon.js
-.env
-index.html
 node_modules/
+.env
+
+# file thừa / test
+server.js
+status.js
+src/
