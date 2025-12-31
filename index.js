@@ -12,6 +12,10 @@ app.use(cors({ origin }));
 
 const PORT = Number(process.env.PORT || 3000);
 
+// STALE_MS: quá thời gian này kể từ updated_at thì coi như OFF
+// (mặc định 15 phút cho đúng staleMs=900000 như m đang thấy trước đó)
+const STALE_MS = Number(process.env.STALE_MS || 900000);
+
 // DB Railway
 const DB = {
   host: process.env.REMOTE_DB_HOST,
@@ -58,13 +62,125 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
+/**
+ * DEBUG: xem API đang connect DB nào + server_status mà API đọc
+ */
+app.get("/api/debug-db", async (req, res) => {
+  try {
+    const [info] = await pool.query(`
+      SELECT 
+        DATABASE() AS db,
+        @@hostname AS host,
+        @@port AS port,
+        UTC_TIMESTAMP() AS utc_now,
+        CURRENT_TIMESTAMP() AS server_now
+    `);
+
+    const [status] = await pool.query(`
+      SELECT * FROM server_status WHERE id = 1 LIMIT 1
+    `);
+
+    res.json({
+      ok: true,
+      staleMs: STALE_MS,
+      dbInfo: info[0],
+      serverStatus: status[0] || null,
+    });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+/**
+ * GET /api/status
+ * Fix timezone: tính last_update_sec ngay trong SQL (UTC)
+ */
+app.get("/api/status", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        is_online,
+        online_count,
+        updated_at,
+        TIMESTAMPDIFF(SECOND, updated_at, UTC_TIMESTAMP()) AS last_update_sec
+      FROM server_status
+      WHERE id = 1
+      LIMIT 1
+    `);
+
+    const row = rows?.[0];
+    if (!row) {
+      return res.json({
+        ok: true,
+        isOnline: false,
+        onlineCount: 0,
+        updatedAt: null,
+        lastUpdateSec: null,
+        reason: "server_status row not found",
+        staleMs: STALE_MS,
+      });
+    }
+
+    const lastUpdateSec = Math.max(0, Number(row.last_update_sec || 0));
+    const isOnline =
+      (row.is_online === 1 || row.is_online === true) &&
+      lastUpdateSec * 1000 <= STALE_MS;
+
+    return res.json({
+      ok: true,
+      isOnline,
+      onlineCount: isOnline ? Number(row.online_count || 0) : 0,
+      updatedAt: row.updated_at,
+      lastUpdateSec,
+      staleMs: STALE_MS,
+    });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+/**
+ * (Giữ để tương thích) GET /api/server_status
+ * Alias kiểu cũ: online/onlineCount
+ */
 app.get("/api/server_status", async (req, res) => {
   try {
-    // ✅ dùng đúng bảng
-    const [rows] = await pool.query(
-      "SELECT COUNT(*) AS c FROM characters_light"
-    );
-    res.json({ ok: true, online: true, cachedRows: rows?.[0]?.c ?? 0 });
+    const [rows] = await pool.query(`
+      SELECT
+        is_online,
+        online_count,
+        updated_at,
+        TIMESTAMPDIFF(SECOND, updated_at, UTC_TIMESTAMP()) AS last_update_sec
+      FROM server_status
+      WHERE id = 1
+      LIMIT 1
+    `);
+
+    const row = rows?.[0];
+    if (!row) {
+      return res.json({
+        ok: true,
+        online: false,
+        onlineCount: 0,
+        updatedAt: null,
+        lastUpdateSec: null,
+        staleMs: STALE_MS,
+      });
+    }
+
+    const lastUpdateSec = Math.max(0, Number(row.last_update_sec || 0));
+    const isOnline =
+      (row.is_online === 1 || row.is_online === true) &&
+      lastUpdateSec * 1000 <= STALE_MS;
+
+    return res.json({
+      ok: true,
+      online: isOnline,
+      onlineCount: isOnline ? Number(row.online_count || 0) : 0,
+      updatedAt: row.updated_at,
+      lastUpdateSec,
+      staleMs: STALE_MS,
+    });
   } catch (err) {
     fail(res, err);
   }
@@ -107,7 +223,7 @@ app.get("/api/leaderboard", async (req, res) => {
 (async () => {
   try {
     await initDb();
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`API running on port ${PORT}`);
     });
   } catch (err) {
